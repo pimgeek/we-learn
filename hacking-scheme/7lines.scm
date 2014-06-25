@@ -22,9 +22,9 @@
 (define (apply f x)
   (begin
     (format #t "The Original FUN:\t\t~a \n" f)
-    (format #t "The Main Body of FUN:\t\t~a \n" (cddr (car f)))
+    (format #t "The Main Body of FUN:\t\t~a \n" (caddr (car f)))
     (format #t "The extented ENV of FUN:\t~a \n" (cons (list (cadr (car f)) x) (cdr f)))
-    (eval (cddr (car f)) (cons (list (cadr (car f)) x) (cdr f)))))
+    (eval (caddr (car f)) (cons (list (cadr (car f)) x) (cdr f)))))
 
 ; read and parse stdin, then evaluate:
 (display (eval (read) '((a 1)))) (newline)
@@ -97,4 +97,39 @@
 ; that x had been treated like a FUN rather than VAR!!!
 ; 
 ; What in hell had been mal-function in this 7 line code?
-
+;
+; It's very tempted for me to say I quickly found the above
+; mal-funtioning behaviors, but I didn't.
+; It took me more than 4 hours' re-run, drafting on papers
+; reogranize the concepts in my mind. 
+;
+; In total, I have missed 3 hours' sleeping time and my 
+; breakfast before I finally got to the key point.
+;
+; There is one suspicious place in the original code:
+;
+; (format #t "The Main Body of FUN:\t\t~a \n" (cddr (car f)))
+; 
+; Being familiar with cdr function, I know this cddr call
+; will inevitably generate a list rather than an atom.
+; And reviewing the original eval definition code I can
+; understand that why x was treated as a FUN rather than VAR
+; It's been passed as a list look like (x) !!!
+;
+; So I changed the code a little, replace *cddr* with *caddr*
+; Then I ran it again. This time I expect the mal-function 
+; will be gone.
+;
+; And this is the output, seeing that, I finally felt reassured
+; to have my lunch.
+;
+;$ guile 7lines.scm
+; ((lambda x x) a)
+; ENV:    ((a 1))
+; FUN:    (lambda x x)
+; ARG:    a
+; The Original FUN:               ((lambda x x) (a 1))
+; The Main Body of FUN:           x
+; The extented ENV of FUN:        ((x 1) (a 1))
+; 1
+; 
